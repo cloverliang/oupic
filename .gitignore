@@ -1,0 +1,6 @@
+**/dist/
+**/build/
+**/*.egg-info/
+**/.vscode
+**/.ipynb_checkpoints
+**/__pycache__
