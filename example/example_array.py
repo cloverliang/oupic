@@ -28,7 +28,7 @@ from numpy.polynomial.legendre import leggauss
 from typing import Dict, Callable
 
 # Note: import local modules last
-from estimator_array import LCEEstimator_array
+from pylce.estimator_array import LCEEstimator_array
 # -
 
 LCE_model = LCEEstimator_array({'alpha': 2.79, 'beta': 1.65, 'omega': np.repeat(5, 9), 'nspecies':10})
