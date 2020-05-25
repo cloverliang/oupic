@@ -161,7 +161,8 @@ class LCEEstimator_array:
         """
         Perform numerical integration for a single variable function between (-1, 1)
         """
-        xs, weight = leggauss(100)
+        ## TODO change to uniform integration
+        xs, weight = leggauss(20)
         return func(xs) @ weight
 
     def _expectation_calc(self, func: Callable[[np.ndarray],
@@ -169,5 +170,6 @@ class LCEEstimator_array:
         """
         Perform numerical integration for a single variable function between (-1, 1)
         """
-        xs, weight = leggauss(100)
+        ## TODO change to uniform integration
+        xs, weight = leggauss(20)
         return (func(xs) * xs) @ weight
