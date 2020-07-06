@@ -43,22 +43,28 @@ def calc_sigma_xy_ou(tree, attr_xy):
     
     nspecies = len(tree.taxon_namespace)
     
-    # init sigma_xy
-    sigma_xy = pd.DataFrame( np.empty((2*nspecies,2*nspecies)) )
-    sigma_xy[:] = np.nan
-    sigma_xy.columns = [nd.label + '_x' for nd in tree.taxon_namespace] + [nd.label + '_y' for nd in tree.taxon_namespace]
-    sigma_xy.index = [nd.label + '_x' for nd in tree.taxon_namespace] + [nd.label + '_y' for nd in tree.taxon_namespace]
-    
+    # init matrix sigma_xy = [ [A, D], [C, B] ]
+    sigma_xy_A = np.zeros((nspecies,nspecies))
+    sigma_xy_B = np.zeros((nspecies,nspecies))
+    sigma_xy_C = np.zeros((nspecies,nspecies))
+    sigma_xy_D = np.zeros((nspecies,nspecies))
+
     # get matrix
     pdm = tree.phylogenetic_distance_matrix()
-    for taxon_a in tree.taxon_namespace:
-        for taxon_b in tree.taxon_namespace:
+    for i,taxon_a in enumerate(tree.taxon_namespace):
+        for j,taxon_b in enumerate(tree.taxon_namespace):
             t_a = pdm(taxon_a, taxon_b)/2
             t_b = pdm(taxon_a, taxon_b)/2
-            sigma_xy.loc[taxon_a.label + '_x', taxon_b.label + '_x'] = cov_ou(sigma_x, sigma_x, lambda_x, lambda_x, t_a, t_b, 1)
-            sigma_xy.loc[taxon_a.label + '_y', taxon_b.label + '_y'] = cov_ou(sigma_y, sigma_y, lambda_y, lambda_y, t_a, t_b, 1)
-            sigma_xy.loc[taxon_a.label + '_x', taxon_b.label + '_y'] = cov_ou(sigma_x, sigma_y, lambda_x, lambda_y, t_a, t_b, gamma_xy)
-            sigma_xy.loc[taxon_a.label + '_y', taxon_b.label + '_x'] = cov_ou(sigma_x, sigma_y, lambda_x, lambda_y, t_b, t_a, gamma_xy)
+            sigma_xy_A[i,j] = cov_ou(sigma_x, sigma_x, lambda_x, lambda_x, t_a, t_b, 1)
+            sigma_xy_B[i,j] = cov_ou(sigma_y, sigma_y, lambda_y, lambda_y, t_a, t_b, 1)
+            sigma_xy_C[i,j] = cov_ou(sigma_x, sigma_y, lambda_x, lambda_y, t_a, t_b, gamma_xy)
+            sigma_xy_D[i,j] = cov_ou(sigma_y, sigma_x, lambda_y, lambda_x, t_a, t_b, gamma_xy)
+    
+    # merge to sigma_xy
+    sigma_xy = pd.DataFrame( np.block([ [sigma_xy_A, sigma_xy_D], [sigma_xy_C, sigma_xy_B] ]) )
+    sigma_xy.columns = [nd.label + '_x' for nd in tree.taxon_namespace] + [nd.label + '_y' for nd in tree.taxon_namespace]
+    sigma_xy.index = [nd.label + '_x' for nd in tree.taxon_namespace] + [nd.label + '_y' for nd in tree.taxon_namespace]
+
     return sigma_xy
 
 # calculate covariance matrix for BM model
@@ -68,21 +74,27 @@ def calc_sigma_xy_bm(tree, attr_xy):
     gamma_xy = attr_xy['gamma_xy']
     nspecies = len(tree.taxon_namespace)
 
-    # init sigma_xy
-    sigma_xy = pd.DataFrame( np.empty((2*nspecies,2*nspecies)) )
-    sigma_xy[:] = np.nan
-    sigma_xy.columns = [nd.label + '_x' for nd in tree.taxon_namespace] + [nd.label + '_y' for nd in tree.taxon_namespace]
-    sigma_xy.index = [nd.label + '_x' for nd in tree.taxon_namespace] + [nd.label + '_y' for nd in tree.taxon_namespace]
+    # init matrix sigma_xy = [ [A, D], [C, B] ]
+    sigma_xy_A = np.zeros((nspecies,nspecies))
+    sigma_xy_B = np.zeros((nspecies,nspecies))
+    sigma_xy_C = np.zeros((nspecies,nspecies))
+    sigma_xy_D = np.zeros((nspecies,nspecies))
 
     # get matrix
     pdm = tree.phylogenetic_distance_matrix()
-    for nd_a in tree.leaf_node_iter():
-        for nd_b in tree.leaf_node_iter():
-            dist_to_root = ( nd_a.distance_from_root() + nd_b.distance_from_root() - pdm(nd_a.taxon, nd_b.taxon) ) /2
-            sigma_xy.loc[nd_a.label + '_x', nd_b.label + '_x'] = (sigma_x**2) * dist_to_root
-            sigma_xy.loc[nd_a.label + '_y', nd_b.label + '_y'] = (sigma_y**2) * dist_to_root
-            sigma_xy.loc[nd_a.label + '_x', nd_b.label + '_y'] = gamma_xy * sigma_x * sigma_y * dist_to_root
-            sigma_xy.loc[nd_a.label + '_y', nd_b.label + '_x'] = gamma_xy * sigma_x * sigma_y * dist_to_root
+    for i,nd_a in enumerate(tree.leaf_node_iter()):
+        for j, nd_b in enumerate(tree.leaf_node_iter()):
+            dist_to_root = .5 * ( nd_a.distance_from_root() + nd_b.distance_from_root() - pdm(nd_a.taxon, nd_b.taxon) )
+            sigma_xy_A[i,j] = (sigma_x**2) * dist_to_root
+            sigma_xy_B[i,j] = (sigma_y**2) * dist_to_root
+            sigma_xy_C[i,j] = gamma_xy * sigma_x * sigma_y * dist_to_root
+            sigma_xy_D[i,j] = gamma_xy * sigma_x * sigma_y * dist_to_root
+    
+    # merge to sigma_xy
+    sigma_xy = pd.DataFrame( np.block([ [sigma_xy_A, sigma_xy_D], [sigma_xy_C, sigma_xy_B] ]) )
+    sigma_xy.columns = [nd.label + '_x' for nd in tree.leaf_node_iter()] + [nd.label + '_y' for nd in tree.leaf_node_iter()]
+    sigma_xy.index = [nd.label + '_x' for nd in tree.leaf_node_iter()] + [nd.label + '_y' for nd in tree.leaf_node_iter()]
+
     return sigma_xy
 
 # define optima/expectation matrix

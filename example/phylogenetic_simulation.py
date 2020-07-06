@@ -17,14 +17,14 @@ from pylce.simulator_corr_util import *
 
 # +
 # Different trees
-tree = dp.Tree.get(path = '/Users/cong/Documents/Projects/2020-per-gene-LCE/data/brawand_tree_reorder.nwk', schema = 'newick') # mammals, L = 320, n = 10
+# tree = dp.Tree.get(path = '/Users/cong/Documents/Projects/2020-per-gene-LCE/data/brawand_tree_reorder.nwk', schema = 'newick') # mammals, L = 320, n = 10
 # tree = dp.Tree.get_from_path('/Users/cong/Documents/Projects/2020-per-gene-LCE/data/podos_tree.nwk', schema = 'newick') # finches, L = 5, n = 8
 # tree = dp.Tree.get_from_path('/Users/cong/Documents/Projects/2020-per-gene-LCE/data/acer_species_modified.nwk', schema = 'newick') # acer, L = 60, n = 55
-# tree = dp.Tree.get_from_path('/Users/cong/Documents/Projects/2020-per-gene-LCE/data/pinus_species.nwk', schema = 'newick') # pinus, L = 73, n = 111
+tree = dp.Tree.get_from_path('/Users/cong/Documents/Projects/2020-per-gene-LCE/data/pinus_species.nwk', schema = 'newick') # pinus, L = 73, n = 111
 # tree = dp.Tree.get_from_path('/Users/cong/Documents/Projects/2020-per-gene-LCE/data/complete_binary_32.nwk', schema = 'newick') # fake, L = 104, n = 16
 
-L = 320
-tree_name = 'Brawand'
+L = 73
+tree_name = 'pinus'
 # -
 
 # assign internal node label
@@ -52,7 +52,7 @@ ts_gamma_series = np.array( [.25, .5, .75, .9] )
 pic_coef = {}
 pic_coef['raw'] = pd.DataFrame( np.identity(len(species)), index = species, columns = species)
 
-for lt in lt_series:
+for lt in tqdm(lt_series):
     idx = 'LT=' + str('{:.2f}'.format(lt))
     if lt == 0:
         pic_coef[idx + ' (BM)'] = get_contrast_coef_bm(tree)[species]
@@ -102,7 +102,7 @@ for i, idx in enumerate(pic_coef):
         
 plt.tight_layout()
 plt.show()
-plt.savefig('/Users/cong/Documents/Projects/2020-per-gene-LCE/figures/'+tree_name+'_contrast_coef.pdf')
+# plt.savefig('/Users/cong/Documents/Projects/2020-per-gene-LCE/figures/'+tree_name+'_contrast_coef.pdf')
 # -
 
 
@@ -121,7 +121,7 @@ ll_r, up_r = get_r_cutoff(nspecies, ts_alpha)
 N = 10000
 error_rates = {}
 
-for lt in lt_series:
+for lt in tqdm(lt_series):
     # part I: type I error
     # set pars
     ts_lambda = lt / L
@@ -147,7 +147,7 @@ for lt in lt_series:
     x_rand = x_rand[species]
     y_rand = y_rand[species]
     
-    gamma_hat = { idx:[] for idx in pic_coef}
+    gamma_hat = { }
     
     # pic for all lambda
     for idx in pic_coef:
@@ -162,12 +162,8 @@ for lt in lt_series:
     error_rates[lt_name] = ( (pd.DataFrame(gamma_hat) < ll_r).sum() + (pd.DataFrame(gamma_hat) > up_r).sum() )/ N
 # -
 
-pd.DataFrame( error_rates ).T.to_csv('/Users/cong/Documents/Projects/2020-per-gene-LCE/figures/'+tree_name+'_type_I_error.csv')
+# pd.DataFrame( error_rates ).T.to_csv('/Users/cong/Documents/Projects/2020-per-gene-LCE/figures/'+tree_name+'_type_I_error.csv')
 pd.DataFrame( error_rates ).T.style.background_gradient(cmap='Oranges', axis=1)
-
-gamma_hat
-
-
 
 
 
@@ -181,7 +177,7 @@ ts_alpha = 0.05 #alpha
 N = 10000
 power = {}
 
-for lt in lt_series:
+for lt in tqdm(lt_series):
     # simulate H0 (gamma=0), set attributes
     if lt == 0:
         # continue
@@ -249,35 +245,7 @@ for lt in lt_series:
         power[lt_name]['bm_pic: '+ gm_name] = np.sum(gamma_hat_h1['bm'] > bm_threshold ) / N
 # -
 
-pd.DataFrame( power ).T.to_csv('/Users/cong/Documents/Projects/2020-per-gene-LCE/figures/' + tree_name + '_power.csv')
+# pd.DataFrame( power ).T.to_csv('/Users/cong/Documents/Projects/2020-per-gene-LCE/figures/' + tree_name + '_power.csv')
 pd.DataFrame( power ).T
-
-
-
-
-
-
-
-# format gamma_hat for visualization
-gamma_hat_df = pd.DataFrame({'gamma_hat':[], 'type':[]})
-for idx in gamma_hat:
-    tmp = pd.DataFrame({'gamma_hat':gamma_hat[idx], 'type':np.repeat(idx, len(gamma_hat[idx]))})
-    gamma_hat_df = gamma_hat_df.append(tmp, ignore_index=True)
-
-# %matplotlib notebook
-
-fig = plt.figure(figsize=(10, 3))
-ax = fig.add_subplot(1, 1, 1)
-ax = sns.violinplot(x='type', y='gamma_hat', data=gamma_hat_df, palette="Set3")
-plt.plot([-.5,4.5], [attr_xy.gamma_xy, attr_xy.gamma_xy], linestyle = '--')
-# plt.ylim([-1., 1.])
-ax.set_title('gamma=' + str(attr_xy.gamma_xy) + ' TL=' + str(attr_xy.lambda_x*L))
-plt.show()
-
-
-
-
-
-
 
 
