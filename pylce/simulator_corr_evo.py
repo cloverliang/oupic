@@ -57,8 +57,8 @@ def calc_sigma_xy_ou(tree, attr_xy):
             t_b = pdm(taxon_a, taxon_b)/2
             sigma_xy_A[i,j] = cov_ou(sigma_x, sigma_x, lambda_x, lambda_x, t_a, t_b, 1)
             sigma_xy_B[i,j] = cov_ou(sigma_y, sigma_y, lambda_y, lambda_y, t_a, t_b, 1)
-            sigma_xy_C[i,j] = cov_ou(sigma_x, sigma_y, lambda_x, lambda_y, t_a, t_b, gamma_xy)
-            sigma_xy_D[i,j] = cov_ou(sigma_y, sigma_x, lambda_y, lambda_x, t_a, t_b, gamma_xy)
+            sigma_xy_C[i,j] = cov_ou(sigma_y, sigma_x, lambda_y, lambda_x, t_a, t_b, gamma_xy)
+            sigma_xy_D[i,j] = cov_ou(sigma_x, sigma_y, lambda_x, lambda_y, t_a, t_b, gamma_xy)
     
     # merge to sigma_xy
     sigma_xy = pd.DataFrame( np.block([ [sigma_xy_A, sigma_xy_D], [sigma_xy_C, sigma_xy_B] ]) )

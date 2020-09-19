@@ -1,6 +1,9 @@
 import numpy as np
 from scipy import stats
 
+def get_lambda_from_kappa(kappa, L):
+    return kappa / L * np.log(2)
+
 # return leaf species in postorder
 def get_species_postorder(tree):
     leaf_order = []
@@ -23,8 +26,16 @@ def calc_row_correlation(x_pic, y_pic):
     return np.einsum('ij,ij -> i', normalized_x_pic, normalized_y_pic)
 
 # get cutoff for certain alpha value
-def get_r_cutoff(nspecies, alpha):
+def get_r_cutoff_contrast(nspecies, alpha):
     df = nspecies -3 # ncontrasts = nspecies-1; df = ncontrasts-2
+    # two-sided
+    ll_t = stats.t.ppf(alpha/2, df)
+    ll_r = ll_t / np.sqrt(df + ll_t**2)
+    up_r = -ll_r
+    return ll_r, up_r
+
+def get_r_cutoff_tips(nspecies, alpha):
+    df = nspecies - 2 
     # two-sided
     ll_t = stats.t.ppf(alpha/2, df)
     ll_r = ll_t / np.sqrt(df + ll_t**2)
