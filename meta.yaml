@@ -37,5 +37,5 @@ requirements:
     - numpy
     - pandas
     - scipy
-    - pyyaml
+    - dendropy
 

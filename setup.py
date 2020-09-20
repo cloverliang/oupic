@@ -18,7 +18,7 @@ def get_version(rel_path):
 
 setup(
     name="pylce",
-    version=get_version("pylce/__init__.py"),
+    version=get_version("pylce/version.py"),
     author="Cong Liang",
     author_email="cong.liang@tju.edu.cn",
     description="level of correlated evolution estimation",
