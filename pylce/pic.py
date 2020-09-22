@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 import dendropy as dp
 import numpy as np
@@ -28,20 +28,7 @@ class PIC:
         2) only bifurcation trees allowed.
         """
         # tree: add internal node label and order leaves/species
-        idx = 1
-        species = []
-        for nd in self.tree.postorder_node_iter():
-            if nd.taxon is None:
-                # Add internal label
-                nd.label = "Internal_" + str(idx)
-                idx = idx + 1
-                # identify leaves
-                for child in nd.child_nodes():
-                    if child.is_leaf():
-                        species.append(child.label)
-            else:
-                # Add taxon label
-                nd.label = nd.taxon.label
+        species = self._label_internal_nodes()
 
         # Initialize results
         contrasts: Dict[str, ContrastInfo] = {}
@@ -60,13 +47,12 @@ class PIC:
 
             # leaf
             if nd.num_child_nodes() == 0:
-                pars = {
-                    "is_contrast": False,
-                    "contrast_standardized": 0.0,
-                    "dist_to_parent": edge_length,  # modified distance to parent
-                    "nd_value": self.taxa_val[nd.label],
-                }
-                contrasts[nd.label] = ContrastInfo(**pars)
+                contrasts[nd.label] = ContrastInfo(
+                    is_contrast=False,
+                    contrast_standardized=0.0,
+                    dist_to_parent=edge_length,
+                    nd_value=self.taxa_val[nd.label],
+                )
             # internal node
             else:
                 # child_nodes() returns a list
@@ -75,21 +61,22 @@ class PIC:
                 left_res = contrasts[left_child.label]
                 right_res = contrasts[right_child.label]
 
-                contrast_val = self.calculator.calc_contrast_standardized(
-                    left_res, right_res
+                # TODO: temporarily wrap around the dict for testing
+                contrast_val = self.calculator.calc_contrast(
+                    left_res, right_res, standardized=True
                 )
                 nd_val = self.calculator.calc_nd_value(left_res, right_res)
+
                 nd_addition_dist_to_parent = (
                     self.calculator.calc_addition_dist_to_parent(left_res, right_res)
                 )
 
-                pars = {
-                    "is_contrast": True,
-                    "contrast_standardized": contrast_val.contrast_standardized,
-                    "dist_to_parent": edge_length + nd_addition_dist_to_parent,
-                    "nd_value": nd_val.node_value,
-                }
-                contrasts[nd.label] = ContrastInfo(**pars)
+                contrasts[nd.label] = ContrastInfo(
+                    is_contrast=True,
+                    contrast_standardized=contrast_val.value,
+                    dist_to_parent=edge_length + nd_addition_dist_to_parent,
+                    nd_value=nd_val.value,
+                )
 
                 # add contrast and node value calculation parameters
                 contrast_coef[nd.label] = (
@@ -110,5 +97,23 @@ class PIC:
         self.contrast_coef = contrast_coef.filter(like="Internal_")
         self.node_coef = node_coef.filter(like="Internal_")
 
-        # FIXME: fix this
-        self.contrasts = pd.DataFrame(contrasts).filter(like="Internal_")
+        self.contrasts = pd.DataFrame(
+            {label: contrast.to_dict() for label, contrast in contrasts.items()}
+        ).filter(like="Internal_")
+
+    def _label_internal_nodes(self) -> List[str]:
+        idx = 1
+        species = []
+        for nd in self.tree.postorder_node_iter():
+            if nd.taxon is None:
+                # Add internal label
+                nd.label = "Internal_" + str(idx)
+                idx = idx + 1
+                # identify leaves
+                for child in nd.child_nodes():
+                    if child.is_leaf():
+                        species.append(child.label)
+            else:
+                # Add taxon label
+                nd.label = nd.taxon.label
+        return species
