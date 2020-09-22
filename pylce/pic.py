@@ -61,7 +61,9 @@ class PIC:
                 contrast_val: ValueWithCoef = self.calculator.calc_contrast(
                     left_res, right_res, standardized=True
                 )
-                nd_val: ValueWithCoef = self.calculator.calc_nd_value(left_res, right_res)
+                nd_val: ValueWithCoef = self.calculator.calc_nd_value(
+                    left_res, right_res
+                )
 
                 nd_addition_dist_to_parent = (
                     self.calculator.calc_addition_dist_to_parent(left_res, right_res)
@@ -85,13 +87,10 @@ class PIC:
                 )
 
         # reformat coefficient matrix to data frame
-        contrast_coef = pd.DataFrame(contrast_coef)
-        contrast_coef.index = species
-        node_coef = pd.DataFrame(node_coef)
-        node_coef.index = species
-
-        self.contrast_coef = contrast_coef.filter(like="Internal_")
-        self.node_coef = node_coef.filter(like="Internal_")
+        self.contrast_coef = pd.DataFrame(contrast_coef, index=species).filter(
+            like="Internal_"
+        )
+        self.node_coef = pd.DataFrame(node_coef, index=species).filter(like="Internal_")
 
         self.contrasts = pd.DataFrame(
             {label: contrast.to_dict() for label, contrast in contrasts.items()}
