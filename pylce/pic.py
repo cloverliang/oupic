@@ -4,7 +4,7 @@ import dendropy as dp
 import numpy as np
 import pandas as pd
 
-from .base_calculator import BaseCalculator, ContrastInfo
+from .base_calculator import BaseCalculator, ContrastInfo, ValueWithCoef
 
 
 class PIC:
@@ -32,14 +32,11 @@ class PIC:
 
         # Initialize results
         contrasts: Dict[str, ContrastInfo] = {}
-        nspecies = len(species)
-        contrast_coef = {}
-        node_coef = {}
-        for i, sp in enumerate(species):
-            identity_vec = np.zeros(nspecies)
-            identity_vec[i] = 1
-            contrast_coef[sp] = identity_vec
-            node_coef[sp] = identity_vec
+        contrast_coef: Dict[str, np.ndarray] = {}
+        node_coef: Dict[str, np.ndarray] = {}
+        for sp, row in zip(species, np.eye(len(species))):
+            node_coef[sp] = row
+            contrast_coef[sp] = row
 
         # postorder traversal nodes
         for nd in self.tree.postorder_node_iter():
@@ -61,11 +58,10 @@ class PIC:
                 left_res = contrasts[left_child.label]
                 right_res = contrasts[right_child.label]
 
-                # TODO: temporarily wrap around the dict for testing
-                contrast_val = self.calculator.calc_contrast(
+                contrast_val: ValueWithCoef = self.calculator.calc_contrast(
                     left_res, right_res, standardized=True
                 )
-                nd_val = self.calculator.calc_nd_value(left_res, right_res)
+                nd_val: ValueWithCoef = self.calculator.calc_nd_value(left_res, right_res)
 
                 nd_addition_dist_to_parent = (
                     self.calculator.calc_addition_dist_to_parent(left_res, right_res)
