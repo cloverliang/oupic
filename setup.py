@@ -17,10 +17,10 @@ def get_version(rel_path):
         raise RuntimeError("Unable to find version string.")
 
 setup(
-    name="pylce",
-    version=get_version("pylce/version.py"),
+    name="oupic",
+    version=get_version("oupic/version.py"),
     author="Cong Liang",
     author_email="cong.liang@tju.edu.cn",
-    description="level of correlated evolution estimation",
+    description="Independent Contrast Method Under the OU Model",
     packages=find_packages()
 )

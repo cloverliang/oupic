@@ -2,7 +2,7 @@
 
 
 package:
-  name: pylce
+  name: oupic
   version: {{ data.get('version') }}
 
 source:

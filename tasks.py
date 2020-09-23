@@ -4,7 +4,7 @@ from platform import python_version
 
 import invoke
 
-PACKAGE = "pylce"
+PACKAGE = "oupic"
 REQUIRED_COVERAGE = 0
 
 

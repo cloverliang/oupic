@@ -4,9 +4,9 @@ sys.path.append('../')
 import dendropy as dp
 import numpy as np
 
-from pylce.pic import PIC
-from pylce.ou_calculator import OUCalculator
-from pylce.bm_calculator import BMCalculator
+from oupic.pic import PIC
+from oupic.ou_calculator import OUCalculator
+from oupic.bm_calculator import BMCalculator
 
 
 tree = dp.Tree.get_from_path('../data/brawand_tree.nwk', schema = 'newick')
