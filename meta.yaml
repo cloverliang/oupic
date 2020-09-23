@@ -1,0 +1,41 @@
+{% set data = load_setup_py_data() %}
+
+
+package:
+  name: oupic
+  version: {{ data.get('version') }}
+
+source:
+  path: .
+
+build:
+  number: 0
+  script: invoke install
+
+requirements:
+  develop:
+    - python {{ python }}
+    - autoflake
+    - black
+    - conda-build
+    - conda-verify
+    - flake8
+    - invoke
+    - isort
+    - m2r
+    - mypy
+    - pytest
+    - pytest-asyncio
+    - pytest-cov
+    - pytest-mock
+    - setuptools
+  build:
+    - python {{ python }}
+    - invoke
+  run:
+    - python {{ python }}
+    - numpy
+    - pandas
+    - scipy
+    - dendropy
+

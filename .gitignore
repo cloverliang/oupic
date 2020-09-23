@@ -1,6 +1,8 @@
 **/dist/
 **/build/
+**/conda.dist/
 **/*.egg-info/
 **/.vscode
 **/.ipynb_checkpoints
 **/__pycache__
+**/.DS_Store
