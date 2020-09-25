@@ -5,7 +5,7 @@ from platform import python_version
 import invoke
 
 PACKAGE = "oupic"
-REQUIRED_COVERAGE = 0
+REQUIRED_COVERAGE = 100
 
 
 @invoke.task(help={"python": "Force a python version (default: current version)"})
