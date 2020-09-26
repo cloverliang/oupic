@@ -26,5 +26,11 @@ $ invoke bootstrap develop
 ### Run example
 A simple example of calculating the contrasts is provided in `example/example_pic.py`.
 
+### Run tests
+All unittests are under `tests` folder. One can run those tests via
+```sh
+$ invoke test
+```
+
 ### Reference
 A Phylogenetic Independent Contrast Method under the Ornstein-Uhlenbeck Model and its Applications in Correlated Evolution. *In preparation.*
