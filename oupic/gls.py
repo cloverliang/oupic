@@ -71,7 +71,7 @@ def GLSFit(
     pval = 1 - np.abs(1 - 2*stats.t.cdf(tval, df))
     
     # variance explained
-    Rsquared = (Y - yhat) @ S_inv @ (Y - yhat) / ((Y - Y.mean()) @ S_inv @ (Y - Y.mean()))
+    Rsquared = 1 - (Y - yhat) @ S_inv @ (Y - yhat) / ((Y - Y.mean()) @ S_inv @ (Y - Y.mean()))
     
     sol = {'b-hat': bhat, 
            'sd-error': sdhat, 

@@ -2,47 +2,70 @@
 import dendropy as dp
 import numpy as np
 import pandas as pd
+import pickle
+from munch import Munch
 from scipy import stats
+from pathlib import Path
 
 from oupic.ou_calculator import OUCalculator
 from oupic.pic import PIC
-from oupic.gls import BMcov, OUcov, gls_fit
-# -
-
-filename = '/Users/cong/Workspace/repos/pylce/data/brawand_tree.nwk'
-tree = dp.Tree.get_from_path(filename, schema='newick')
-
-# generate sample data
-X_dic = {}
-Y_dic = {}
-i = 0
-for taxon in tree.taxon_namespace:
-    X_dic[taxon.label] = i
-    Y_dic[taxon.label] = X_dic[taxon.label] + 3*np.random.rand()
-    i += 1
+from oupic.gls import GLSFit
+from oupic.phylo_cov import PhyloCov
 
 # +
-# GLS fit
+# resolve file path
+DIR_NAME = Path(__file__).resolve().parents[1]
+
+# load tree
+filename = DIR_NAME / "data" / "acer_tree.nwk"
+tree = dp.Tree.get_from_path(filename, schema="newick")
+
+# load simulated data
+traitX_filename = DIR_NAME / 'data' / 'simulated_acer_tree_traitX.pickel'
+traitY_filename = DIR_NAME / 'data' / 'simulated_acer_tree_traitY.pickel'
+with open(traitX_filename, 'rb') as file:
+    X_dic = pickle.load(file)
+with open(traitY_filename, 'rb') as file:
+    Y_dic = pickle.load(file)
+    
+# load attributes
+attr_filename = DIR_NAME / 'data' / 'simulated_acer_tree_attributes.pickel'
+with open(attr_filename, 'rb') as file:
+    attr_xy = pickle.load(file)
+# -
+
+print('Example tree: Acer Tree')
+print('Number of taxa: ', len(tree.taxon_namespace))
+# tree.print_plot()
+print('Two traits were simulated with correlated evolution parameter: ', attr_xy['gamma_xy'])
+
+# +
+# ============ Test 1: GLS fit ===============
 X = np.array(list(X_dic.values()))
 Y = np.array(list(Y_dic.values()))
-my_fit = gls_fit(X, Y, OUcov(tree, 0.5), add_intercept=True)
+
+# covariance matrix
+tree_cov = PhyloCov(tree)
+ts_sigma = tree_cov.get_cov_mat(attr_xy['lambda_x'])
+
+# fit
+my_fit = GLSFit(X, Y, ts_sigma, add_intercept=True)
 
 # format data
-RSS = my_fit.pop('RSS')
+R_squared = my_fit.pop('R-squared')
 my_fit = pd.DataFrame(my_fit)
 my_fit = my_fit.rename(index={0:'intercept', 1:'slope'})
 
 # print
 format_str = "=" * 20 + " %s " + "=" * 20
-print('\n' + format_str % 'GLS fit')
+print('\n' + format_str % 'Test 1: GLS fit on raw trait values')
 print(my_fit)
-print('\nRSS: ', RSS)
+print('\nR-squared: %.6f' % R_squared)
 
 # +
-# Calculate PIC and OLS fit
-
-# Initiate calculator
-calculator = OUCalculator(ts_lambda=0.5)
+# =========== Test 2: OLS fit on PIC (no intercept) ============
+# Initiate PIC calculator
+calculator = OUCalculator(attr_xy['lambda_x'])
 # Calcualte PIC
 pic_X = PIC(tree, calculator, X_dic)
 pic_Y = PIC(tree, calculator, Y_dic)
@@ -52,28 +75,39 @@ X_pic = pic_X.contrasts.loc['contrast_standardized'].astype(float)
 Y_pic = pic_Y.contrasts.loc['contrast_standardized'].astype(float)
 
 # OLS fit
-my_ols = gls_fit(X_pic, Y_pic, np.identity(len(Y_pic)), add_intercept=False)
+ts_sigma = np.identity(len(Y_pic))
+my_ols = GLSFit(X_pic, Y_pic, ts_sigma, add_intercept=False)
 
 # print
-print('\n' + format_str % 'OLS fit on PICs')
-[ print(key,':',value) for key, value in my_ols.items() ]
+print('\n' + format_str % 'Test 2: OLS fit on PICs (no intercept)')
+for key, value in my_ols.items():
+    print(key, ' : %.6f' % value)
 
 # +
-# Correlation test between PICs
+# =========== Test 3: Correlation test between PICs ===========
 m = len(X_pic)
 rval = np.corrcoef(X_pic.astype(float), Y_pic.astype(float))[0,1]
 tval = rval * np.sqrt((m - 2)/(1 - rval**2))
 pval = 1 - np.abs(1 - 2*stats.t.cdf(tval, df=m-2))
 
 # print 
-print('\n' + format_str % 'Correlation test between PICs')
-print('Correlation Coefficient: ', rval)
-print('R-squared: ', rval**2)
-print('Degree of freedom: ', m-2)
-print('Test p value: ', pval)
-# -
+print('\n' + format_str % 'Test 3: Correlation test between PICs')
+print('Correlation Coefficient: %.6f' % rval)
+print('R-squared: %.6f' % rval**2)
+print('Test p value: %.6f' % pval)
 
-my_ols_icpt = gls_fit(X_pic, Y_pic, np.identity(len(Y_pic)), add_intercept=True)
-[print(key, ':', value) for key, value in my_ols_icpt.items()]
+# +
+# ============ Test 4: OLS fit on PIC (with intercept) ============
+ts_sigma = np.identity(len(Y_pic))
+my_ols_icpt = GLSFit(X_pic, Y_pic, ts_sigma, add_intercept=True)
+
+R_squared = my_ols_icpt.pop('R-squared')
+my_ols_icpt = pd.DataFrame(my_ols_icpt)
+my_ols_icpt = my_ols_icpt.rename(index={0:'intercept', 1:'slope'})
+
+print('\n' + format_str % 'Test 4: OLS fit on PICs (with intercept)')
+print(my_ols_icpt)
+print('\nR-squared: %.6f' % R_squared)
+# -
 
 
