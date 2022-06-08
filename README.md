@@ -27,4 +27,5 @@ $ invoke bootstrap develop
 A simple example of calculating the contrasts is provided in `example/example_pic.py`.
 
 ### Reference
-A Phylogenetic Independent Contrast Method under the Ornstein-Uhlenbeck Model and its Applications in Correlated Evolution. *In preparation.*
+A Phylogenetic Independent Contrast Method under the Ornstein-Uhlenbeck Model and its Applications in Correlated Evolution. 
+https://www.biorxiv.org/content/10.1101/2021.04.24.441286v1.full
