@@ -2,7 +2,7 @@
 
 A Phylogenetic Independent Contrast Method Under the OU Model
 
-*oupic* is a python package for calculating phylogenetic independent contrasts under the Ornstein-Uhlenbeck model. The package is under active development. The developing version will be available at https://github.com/cloverliang/oupic. 
+*oupic* is a python package for calculating phylogenetic independent contrasts under the Ornstein-Uhlenbeck model. The package is under active development. 
 
 ### Install
 One way to install the package is to run
@@ -27,5 +27,4 @@ $ invoke bootstrap develop
 A simple example of calculating the contrasts is provided in `example/example_pic.py`.
 
 ### Reference
-A Phylogenetic Independent Contrast Method under the Ornstein-Uhlenbeck Model and its Applications in Correlated Evolution. 
-https://www.biorxiv.org/content/10.1101/2021.04.24.441286v1.full
+A Phylogenetic Independent Contrast Method under the Ornstein-Uhlenbeck Model and its Applications in Correlated Evolution.
